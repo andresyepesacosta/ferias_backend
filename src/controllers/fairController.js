@@ -12,6 +12,20 @@ class FairController {
     try {
       const userId = req.user.id;
       
+      // Primero actualizamos automáticamente los estados basados en fechas
+      await pool.execute(`
+        UPDATE fairs 
+        SET 
+          status = CASE 
+            WHEN start_date > CURDATE() THEN 'upcoming'
+            WHEN start_date <= CURDATE() AND end_date >= CURDATE() THEN 'active'
+            WHEN end_date < CURDATE() AND status != 'cancelled' THEN 'completed'
+            ELSE status
+          END,
+          updated_at = CURRENT_TIMESTAMP
+        WHERE user_id = ? AND status != 'cancelled'
+      `, [userId]);
+      
       const query = `
         SELECT 
           id,
@@ -25,12 +39,6 @@ class FairController {
           expenses,
           created_at,
           updated_at,
-          CASE 
-            WHEN start_date > CURDATE() THEN 'upcoming'
-            WHEN start_date <= CURDATE() AND end_date >= CURDATE() THEN 'active'
-            WHEN end_date < CURDATE() THEN 'completed'
-            ELSE status
-          END as computed_status,
           DATEDIFF(start_date, CURDATE()) as days_until_start,
           DATEDIFF(end_date, CURDATE()) as days_until_end
         FROM fairs 
@@ -62,6 +70,20 @@ class FairController {
       const userId = req.user.id;
       const fairId = req.params.id;
       
+      // Actualizar el estado de la feria basado en fechas
+      await pool.execute(`
+        UPDATE fairs 
+        SET 
+          status = CASE 
+            WHEN start_date > CURDATE() THEN 'upcoming'
+            WHEN start_date <= CURDATE() AND end_date >= CURDATE() THEN 'active'
+            WHEN end_date < CURDATE() AND status != 'cancelled' THEN 'completed'
+            ELSE status
+          END,
+          updated_at = CURRENT_TIMESTAMP
+        WHERE id = ? AND user_id = ? AND status != 'cancelled'
+      `, [fairId, userId]);
+      
       const query = `
         SELECT 
           id,
@@ -75,12 +97,6 @@ class FairController {
           expenses,
           created_at,
           updated_at,
-          CASE 
-            WHEN start_date > CURDATE() THEN 'upcoming'
-            WHEN start_date <= CURDATE() AND end_date >= CURDATE() THEN 'active'
-            WHEN end_date < CURDATE() THEN 'completed'
-            ELSE status
-          END as computed_status,
           DATEDIFF(start_date, CURDATE()) as days_until_start,
           DATEDIFF(end_date, CURDATE()) as days_until_end
         FROM fairs 
@@ -126,11 +142,11 @@ class FairController {
         });
       }
       
-      // Validar que la fecha de fin sea posterior a la de inicio
-      if (new Date(end_date) <= new Date(start_date)) {
+      // Validar que la fecha de fin no sea anterior a la de inicio
+      if (new Date(end_date) < new Date(start_date)) {
         return res.status(400).json({
           success: false,
-          message: 'La fecha de fin debe ser posterior a la fecha de inicio'
+          message: 'La fecha de fin no puede ser anterior a la fecha de inicio'
         });
       }
       
@@ -138,7 +154,10 @@ class FairController {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       
-      if (new Date(start_date) < today) {
+      const startDate = new Date(start_date);
+      startDate.setHours(0, 0, 0, 0);
+      
+      if (startDate < today) {
         return res.status(400).json({
           success: false,
           message: 'La fecha de inicio no puede ser en el pasado'
@@ -208,10 +227,10 @@ class FairController {
       
       // Validaciones si se proporcionan nuevas fechas
       if (start_date && end_date) {
-        if (new Date(end_date) <= new Date(start_date)) {
+        if (new Date(end_date) < new Date(start_date)) {
           return res.status(400).json({
             success: false,
-            message: 'La fecha de fin debe ser posterior a la fecha de inicio'
+            message: 'La fecha de fin no puede ser anterior a la fecha de inicio'
           });
         }
       }
