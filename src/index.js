@@ -5,6 +5,7 @@ const rateLimit = require('express-rate-limit');
 const session = require('express-session');
 const passport = require('./config/passport');
 const { testConnection } = require('./config/database');
+const { initDatabase } = require('./config/sequelize');
 require('dotenv').config();
 
 const app = express();
@@ -80,7 +81,7 @@ app.listen(PORT, async () => {
   console.log(`🚀 Servidor ejecutándose en puerto ${PORT}`);
   console.log(`📊 API URL: http://localhost:${PORT}/api`);
   console.log(`💊 Health check: http://localhost:${PORT}/api/health`);
-  
+  await initDatabase();
   // Probar conexión a la base de datos
   await testConnection();
 });
