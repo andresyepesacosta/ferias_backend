@@ -1,12 +1,12 @@
-import User from "../modules/user/user.model.js";
-import Currency from "../modules/currency/currency.model.js";
-import Fair from "../modules/fair/fair.model.js";
-import Product from "../modules/product/product.model.js";
-import ProductCategory from "../modules/product/productCategory.model.js";
-import Sale from "../modules/sale/sale.model.js";
-import SaleItem from "../modules/sale/saleItem.model.js";
-import Event from "../modules/event/event.model.js";
-import Expense from "../modules/expense/expense.model.js";
+import User from "../modules/users/user.model.js";
+import Currency from "../modules/currencies/currency.model.js";
+import Fair from "../modules/fairs/fair.model.js";
+import Product from "../modules/products/product.model.js";
+import ProductCategory from "../modules/products/productCategory.model.js";
+import Sale from "../modules/sales/sale.model.js";
+import SaleItem from "../modules/sales/saleItem.model.js";
+import Event from "../modules/events/event.model.js";
+import Expense from "../modules/expenses/expense.model.js";
 
 // Asociaciones (relaciones) entre modelos
 
